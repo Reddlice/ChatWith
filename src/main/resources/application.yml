@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: ChatWith
+
+claude-code:
+  path: D:\software\nodejs\node_modules\@anthropic-ai\claude-code\bin\claude.exe
+  timeout: 300000
+  skillsDir: .claude/skills
+
+setting:
+  skillName : sora-perspective
+  systemPrompt : "请不要返回 我以春日野穹的视角和你聊,基于角色公开设定推断等字样 请用中文回答!!!!!! 请用中文回答!!!!"
+
+
+server:
+  port: 8080

@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__github__search_repositories",
+      "mcp__github__get_file_contents",
+      "mcp__github__list_commits",
+      "mcp__github__get_pull_request",
+      "Bash(curl -s \"https://api.github.com/repos/gnembon/fabric-carpet/releases?per_page=5\")",
+      "Bash(curl -s \"https://api.github.com/repos/gnembon/fabric-carpet/releases?per_page=10\")",
+      "Bash(python3 -c \" import json, sys data = json.load\\(sys.stdin\\) for r in data: tag = r['tag_name'] name = r['name'] body = r.get\\('body',''\\)[:300] print\\(f'--- {tag} \\({r[\\\\\"published_at\\\\\"][:10]}\\) ---'\\) print\\(name\\) if body: print\\(body\\) print\\(\\) \")",
+      "Bash(curl -s \"https://api.github.com/repos/gnembon/fabric-carpet/releases?per_page=10&page=2\")",
+      "WebSearch",
+      "Bash(claude *)",
+      "Bash(findstr /i \"skill plugin agent\")"
+    ]
+  }
+}

@@ -31,3 +31,4 @@ build/
 
 ### VS Code ###
 .vscode/
+front/chat-with-front/node_modules
