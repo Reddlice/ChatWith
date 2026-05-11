@@ -11,7 +11,8 @@
       "Bash(curl -s \"https://api.github.com/repos/gnembon/fabric-carpet/releases?per_page=10&page=2\")",
       "WebSearch",
       "Bash(claude *)",
-      "Bash(findstr /i \"skill plugin agent\")"
+      "Bash(findstr /i \"skill plugin agent\")",
+      "Bash(git rm *)"
     ]
   }
 }

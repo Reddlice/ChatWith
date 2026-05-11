@@ -1,5 +1,6 @@
 package org.reddlice.chatwith.service.impl;
 
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.reddlice.chatwith.config.ClaudeCodeConfig;
@@ -9,6 +10,7 @@ import org.reddlice.chatwith.service.ChatService;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -16,7 +18,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 @Service
@@ -24,6 +28,33 @@ import java.util.concurrent.TimeUnit;
 public class ChatServiceImpl implements ChatService {
 
     private final ClaudeCodeConfig claudeCodeConfig;
+
+    private String sessionId;
+    private final AtomicBoolean firstRequest = new AtomicBoolean(true);
+
+    @PostConstruct
+    public void init() {
+        Path sessionFile = Paths.get(claudeCodeConfig.getSkillsDir()).getParent().resolve(".chatwith-session");
+        if (Files.isRegularFile(sessionFile)) {
+            try {
+                sessionId = Files.readString(sessionFile).trim();
+                firstRequest.set(false);
+                log.info("恢复 Claude Code 会话: {}", sessionId);
+            } catch (IOException e) {
+                log.warn("读取会话文件失败，将创建新会话", e);
+            }
+        }
+        if (sessionId == null) {
+            sessionId = UUID.randomUUID().toString();
+            try {
+                Files.createDirectories(sessionFile.getParent());
+                Files.writeString(sessionFile, sessionId);
+                log.info("创建新 Claude Code 会话: {}", sessionId);
+            } catch (IOException e) {
+                log.warn("写入会话文件失败", e);
+            }
+        }
+    }
 
     @Override
     public ChatResponse chat(ChatRequest chatRequest) {
@@ -53,11 +84,20 @@ public class ChatServiceImpl implements ChatService {
         // 3. 构建命令
         List<String> command = new ArrayList<>();
         command.add(claudeCodeConfig.getPath());
-        command.add("-p");
-        command.add(prompt);
-        if (systemPrompt != null) {
-            command.add("--system-prompt");
-            command.add(systemPrompt);
+        if (firstRequest.getAndSet(false)) {
+            command.add("--session-id");
+            command.add(sessionId);
+            command.add("-p");
+            command.add(prompt);
+            if (systemPrompt != null) {
+                command.add("--system-prompt");
+                command.add(systemPrompt);
+            }
+        } else {
+            command.add("--resume");
+            command.add(sessionId);
+            command.add("-p");
+            command.add(prompt);
         }
 
 //        log.info("执行命令: {}", String.join(" ", command));
