@@ -7,6 +7,7 @@ import org.reddlice.chatwith.config.ClaudeCodeConfig;
 import org.reddlice.chatwith.dto.ChatRequest;
 import org.reddlice.chatwith.dto.ChatResponse;
 import org.reddlice.chatwith.service.ChatService;
+import org.reddlice.chatwith.service.TtsService;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
@@ -17,6 +18,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -28,6 +30,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class ChatServiceImpl implements ChatService {
 
     private final ClaudeCodeConfig claudeCodeConfig;
+    private final TtsService ttsService;
 
     private String sessionId;
     private final AtomicBoolean firstRequest = new AtomicBoolean(true);
@@ -149,7 +152,14 @@ public class ChatServiceImpl implements ChatService {
             }
 
             log.info("Chat 成功, skill={}, reply length={} replay = {}", skillName, reply.length() ,reply);
-            return new ChatResponse(reply, skillName, true);
+            String audioBase64 = null;
+            byte[] audioBytes = ttsService.textToSpeech(reply);
+            if (audioBytes != null && audioBytes.length > 0) {
+                audioBase64 = Base64.getEncoder().encodeToString(audioBytes);
+            }
+            ChatResponse response = new ChatResponse(reply, skillName, true);
+            response.setAudioBase64(audioBase64);
+            return response;
 
         } catch (Exception e) {
             log.error("执行 Claude Code 时异常", e);

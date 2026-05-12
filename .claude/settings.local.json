@@ -12,7 +12,8 @@
       "WebSearch",
       "Bash(claude *)",
       "Bash(findstr /i \"skill plugin agent\")",
-      "Bash(git rm *)"
+      "Bash(git rm *)",
+      "Bash(./mvnw compile *)"
     ]
   }
 }

@@ -24,6 +24,11 @@ function scrollToBottom() {
   })
 }
 
+function playAudio(base64) {
+  const audio = new Audio('data:audio/wav;base64,' + base64)
+  audio.play()
+}
+
 function onKeydown(e) {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault()
@@ -44,6 +49,7 @@ function onKeydown(e) {
 
         <div :class="['bubble', msg.isUser ? 'bubble-user' : 'bubble-ai']">
           <div class="bubble-text">{{ msg.text }}</div>
+          <div v-if="msg.audioBase64" class="play-btn" @click="playAudio(msg.audioBase64)">&#x1f50a; 播放语音</div>
         </div>
 
         <div v-if="msg.isUser" class="avatar-placeholder"></div>
@@ -185,6 +191,18 @@ function onKeydown(e) {
 .send-btn:disabled {
   background-color: #b3b3b3;
   cursor: not-allowed;
+}
+
+.play-btn {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #576b95;
+  cursor: pointer;
+  user-select: none;
+}
+
+.play-btn:hover {
+  text-decoration: underline;
 }
 
 .typing-indicator {

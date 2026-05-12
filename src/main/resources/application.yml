@@ -12,5 +12,14 @@ setting:
   systemPrompt : "请用中文回答!!!!!! 请用中文回答!!!! 请用中文回答!!! 请用中文回答!! 如果是日文请翻译为中文!!!"
 
 
+tts:
+  url: http://127.0.0.1:9880
+  ref-audio-path: D:\idea_java_project\IntelliJ IDEA 2024.1.4\projects\ChatWith\src\main\resources\SR000104.wav
+  prompt-text: "家の近くを散歩してただけだから、それに自分が歩いてきた道を戻るくらいはできる。"
+  prompt-lang: ja
+  text-lang: zh
+  media-type: wav
+  speed-factor: 1.0
+
 server:
   port: 8080

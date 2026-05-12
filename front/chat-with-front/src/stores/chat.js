@@ -9,7 +9,8 @@ export const useChatStore = defineStore('chat', () => {
     messages.value.push({
       id: Date.now(),
       text: msg.text,
-      isUser: msg.isUser
+      isUser: msg.isUser,
+      audioBase64: msg.audioBase64 || null
     })
   }
 
@@ -26,7 +27,7 @@ export const useChatStore = defineStore('chat', () => {
         body: JSON.stringify({ prompt: text })
       })
       const data = await res.json()
-      addMessage({ text: data.reply, isUser: false })
+      addMessage({ text: data.reply, isUser: false, audioBase64: data.audioBase64 })
     } catch (e) {
       addMessage({ text: '请求失败: ' + e.message, isUser: false })
     } finally {
