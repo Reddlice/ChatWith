@@ -11,6 +11,7 @@ public class ChatResponse {
     private String reply;
     private String skillUsed;
     private boolean success;
+    private String messageId;
     private String audioBase64;
 
     public ChatResponse() {}

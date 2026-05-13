@@ -18,7 +18,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -152,13 +151,10 @@ public class ChatServiceImpl implements ChatService {
             }
 
             log.info("Chat 成功, skill={}, reply length={} replay = {}", skillName, reply.length() ,reply);
-            String audioBase64 = null;
-            byte[] audioBytes = ttsService.textToSpeech(reply);
-            if (audioBytes != null && audioBytes.length > 0) {
-                audioBase64 = Base64.getEncoder().encodeToString(audioBytes);
-            }
+            String messageId = UUID.randomUUID().toString();
+            ttsService.textToSpeechAsync(reply, messageId);
             ChatResponse response = new ChatResponse(reply, skillName, true);
-            response.setAudioBase64(audioBase64);
+            response.setMessageId(messageId);
             return response;
 
         } catch (Exception e) {

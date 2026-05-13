@@ -17,9 +17,15 @@ tts:
   ref-audio-path: D:\idea_java_project\IntelliJ IDEA 2024.1.4\projects\ChatWith\src\main\resources\SR000104.wav
   prompt-text: "家の近くを散歩してただけだから、それに自分が歩いてきた道を戻るくらいはできる。"
   prompt-lang: ja
-  text-lang: zh
+  text-lang: ja
   media-type: wav
   speed-factor: 1.0
+
+baidu:
+  translate:
+    app-id: 20260512002612061
+    secret-key: k4pkBuhUsHhaxaw54XLL
+    api-url: https://fanyi-api.baidu.com/api/trans/vip/translate
 
 server:
   port: 8080

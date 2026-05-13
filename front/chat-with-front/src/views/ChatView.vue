@@ -50,6 +50,7 @@ function onKeydown(e) {
         <div :class="['bubble', msg.isUser ? 'bubble-user' : 'bubble-ai']">
           <div class="bubble-text">{{ msg.text }}</div>
           <div v-if="msg.audioBase64" class="play-btn" @click="playAudio(msg.audioBase64)">&#x1f50a; 播放语音</div>
+          <div v-else-if="msg.messageId && !msg.isUser" class="audio-pending">语音生成中...</div>
         </div>
 
         <div v-if="msg.isUser" class="avatar-placeholder"></div>
@@ -199,6 +200,12 @@ function onKeydown(e) {
   color: #576b95;
   cursor: pointer;
   user-select: none;
+}
+
+.audio-pending {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #999;
 }
 
 .play-btn:hover {

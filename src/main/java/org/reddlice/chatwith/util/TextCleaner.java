@@ -24,8 +24,8 @@ public final class TextCleaner {
         }
         String result = FULL_WIDTH.matcher(text).replaceAll("");
         result = HALF_WIDTH.matcher(result).replaceAll("");
-        // 清理多余空白行
-        return result.replaceAll("(?m)^\\s*\\n", "").trim();
+        // 去除所有换行符，合并为单行
+        return result.replaceAll("\\s*\\n\\s*", "").trim();
     }
 
     /**
