@@ -1,10 +1,17 @@
 <script setup>
-import { ref, nextTick } from 'vue'
+import { ref, nextTick, onMounted } from 'vue'
 import avatar from '@/assets/soro.png'
 import { useChatStore } from '@/stores/chat'
 
 const store = useChatStore()
 const inputText = ref('')
+const showSidebar = ref(true)
+const editingId = ref(null)
+const editName = ref('')
+
+onMounted(() => {
+  store.init()
+})
 
 function sendMessage() {
   const text = inputText.value.trim()
@@ -35,61 +42,277 @@ function onKeydown(e) {
     sendMessage()
   }
 }
+
+function selectSession(id) {
+  if (id !== store.activeSessionId) {
+    store.switchSession(id)
+  }
+}
+
+function startRename(session) {
+  editingId.value = session.id
+  editName.value = session.name
+}
+
+function confirmRename() {
+  const name = editName.value.trim()
+  if (name && editingId.value) {
+    store.renameSession(editingId.value, name)
+  }
+  editingId.value = null
+  editName.value = ''
+}
+
+function cancelRename() {
+  editingId.value = null
+  editName.value = ''
+}
+
+function onRenameKeydown(e) {
+  if (e.key === 'Enter') confirmRename()
+  else if (e.key === 'Escape') cancelRename()
+}
+
+async function newSession() {
+  await store.createSession('新会话')
+}
+
+async function removeSession(id) {
+  if (!confirm('确定删除该会话？消息将被清除。')) return
+  await store.deleteSession(id)
+}
 </script>
 
 <template>
-  <div class="chat-container">
-    <div class="message-list" ref="messageList">
-      <div
-        v-for="msg in store.messages"
-        :key="msg.id"
-        :class="['message-row', msg.isUser ? 'row-right' : 'row-left']"
-      >
-        <img v-if="!msg.isUser" class="avatar" :src="avatar" alt="avatar" />
-
-        <div :class="['bubble', msg.isUser ? 'bubble-user' : 'bubble-ai']">
-          <div class="bubble-text">{{ msg.text }}</div>
-          <div v-if="msg.audioBase64" class="play-btn" @click="playAudio(msg.audioBase64)">&#x1f50a; 播放语音</div>
-          <div v-else-if="msg.messageId && !msg.isUser" class="audio-pending">语音生成中...</div>
-        </div>
-
-        <div v-if="msg.isUser" class="avatar-placeholder"></div>
+  <div class="app-layout">
+    <!-- 侧边栏 -->
+    <aside :class="['sidebar', { collapsed: !showSidebar }]">
+      <div class="sidebar-header">
+        <span v-if="showSidebar">会话列表</span>
+        <button class="toggle-btn" @click="showSidebar = !showSidebar">
+          {{ showSidebar ? '☰' : '☰' }}
+        </button>
       </div>
 
-      <div v-if="store.loading" class="message-row row-left">
-        <img class="avatar" :src="avatar" alt="avatar" />
-        <div class="bubble bubble-ai">
-          <div class="typing-indicator">
-            <span></span><span></span><span></span>
+      <div v-if="showSidebar" class="sidebar-body">
+        <button class="new-session-btn" @click="newSession">+ 新会话</button>
+
+        <div class="session-list">
+          <div
+            v-for="s in store.sessions"
+            :key="s.id"
+            :class="['session-item', { active: s.id === store.activeSessionId }]"
+            @click="selectSession(s.id)"
+          >
+            <div class="session-name" v-if="editingId !== s.id" @dblclick="startRename(s)">
+              {{ s.name }}
+            </div>
+            <input
+              v-else
+              v-model="editName"
+              class="rename-input"
+              @keydown="onRenameKeydown"
+              @blur="confirmRename"
+              @click.stop
+              autofocus
+            />
+            <button class="delete-btn" @click.stop="removeSession(s.id)" title="删除会话">×</button>
           </div>
         </div>
       </div>
-    </div>
+    </aside>
 
-    <div class="input-area">
-      <input
-        v-model="inputText"
-        class="input-box"
-        type="text"
-        placeholder="输入消息..."
-        :disabled="store.loading"
-        @keydown="onKeydown"
-      />
-      <button class="send-btn" @click="sendMessage" :disabled="store.loading || !inputText.trim()">
-        发送
-      </button>
+    <!-- 聊天区域 -->
+    <div class="chat-container">
+      <div class="message-list" ref="messageList">
+        <div
+          v-for="msg in store.messages"
+          :key="msg.id"
+          :class="['message-row', msg.isUser ? 'row-right' : 'row-left']"
+        >
+          <img v-if="!msg.isUser" class="avatar" :src="avatar" alt="avatar" />
+
+          <div :class="['bubble', msg.isUser ? 'bubble-user' : 'bubble-ai']">
+            <div class="bubble-text">{{ msg.text }}</div>
+            <div v-if="msg.audioBase64" class="play-btn" @click="playAudio(msg.audioBase64)">&#x1f50a; 播放语音</div>
+            <div v-else-if="msg.messageId && !msg.isUser" class="audio-pending">语音生成中...</div>
+          </div>
+
+          <div v-if="msg.isUser" class="avatar-placeholder"></div>
+        </div>
+
+        <div v-if="store.loading" class="message-row row-left">
+          <img class="avatar" :src="avatar" alt="avatar" />
+          <div class="bubble bubble-ai">
+            <div class="typing-indicator">
+              <span></span><span></span><span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="input-area">
+        <input
+          v-model="inputText"
+          class="input-box"
+          type="text"
+          placeholder="输入消息..."
+          :disabled="store.loading"
+          @keydown="onKeydown"
+        />
+        <button class="send-btn" @click="sendMessage" :disabled="store.loading || !inputText.trim()">
+          发送
+        </button>
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.chat-container {
+.app-layout {
+  display: flex;
+  height: 100vh;
+  background-color: #ededed;
+}
+
+/* ---- 侧边栏 ---- */
+.sidebar {
+  width: 200px;
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  background-color: #2e2e2e;
+  color: #ccc;
+  transition: width 0.2s;
+  overflow: hidden;
+}
+
+.sidebar.collapsed {
+  width: 40px;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 8px;
+  font-size: 14px;
+  font-weight: bold;
+  color: #fff;
+  white-space: nowrap;
+}
+
+.toggle-btn {
+  background: none;
+  border: none;
+  color: #aaa;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 2px 4px;
+  flex-shrink: 0;
+}
+
+.toggle-btn:hover {
+  color: #fff;
+}
+
+.sidebar-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.new-session-btn {
+  margin: 6px 8px;
+  padding: 8px 0;
+  border: 1px dashed #555;
+  border-radius: 6px;
+  background: none;
+  color: #aaa;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.new-session-btn:hover {
+  border-color: #07c160;
+  color: #07c160;
+}
+
+.session-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+.session-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.1s;
+  border-left: 3px solid transparent;
+}
+
+.session-item:hover {
+  background-color: #3a3a3a;
+}
+
+.session-item.active {
+  background-color: #3a3a3a;
+  border-left-color: #07c160;
+  color: #fff;
+}
+
+.session-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rename-input {
+  flex: 1;
+  border: 1px solid #07c160;
+  border-radius: 3px;
+  padding: 2px 6px;
+  font-size: 13px;
+  background: #fff;
+  color: #333;
+  outline: none;
+  min-width: 0;
+}
+
+.delete-btn {
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0 2px;
+  margin-left: 4px;
+  flex-shrink: 0;
+  visibility: hidden;
+}
+
+.session-item:hover .delete-btn {
+  visibility: visible;
+}
+
+.delete-btn:hover {
+  color: #e74c3c;
+}
+
+/* ---- 聊天区域 ---- */
+.chat-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   max-width: 600px;
   margin: 0 auto;
-  background-color: #ededed;
+  min-width: 0;
 }
 
 .message-list {

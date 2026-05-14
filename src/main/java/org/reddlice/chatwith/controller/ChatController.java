@@ -3,17 +3,22 @@ package org.reddlice.chatwith.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.reddlice.chatwith.component.AudioStore;
+import org.reddlice.chatwith.component.SessionManager;
 import org.reddlice.chatwith.config.DefaultSettingConfig;
 import org.reddlice.chatwith.dto.ChatRequest;
 import org.reddlice.chatwith.dto.ChatResponse;
+import org.reddlice.chatwith.dto.SessionInfo;
 import org.reddlice.chatwith.service.ChatService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -30,6 +35,7 @@ public class ChatController {
     private final ChatService chatService;
     private final DefaultSettingConfig defaultSettingConfig;
     private final AudioStore audioStore;
+    private final SessionManager sessionManager;
 
     @PostMapping("/chat-with/send")
     public ChatResponse chat(@RequestBody ChatRequest chatRequest){
@@ -46,5 +52,30 @@ public class ChatController {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.ok(Map.of("audioBase64", audio, "ready", true));
+    }
+
+    @GetMapping("/chat-with/sessions")
+    public List<SessionInfo> listSessions() {
+        return sessionManager.listSessions();
+    }
+
+    @PostMapping("/chat-with/sessions")
+    public SessionInfo createSession(@RequestBody Map<String, String> body) {
+        return sessionManager.createSession(body.get("name"));
+    }
+
+    @PutMapping("/chat-with/sessions/{id}")
+    public void renameSession(@PathVariable String id, @RequestBody Map<String, String> body) {
+        sessionManager.renameSession(id, body.get("name"));
+    }
+
+    @DeleteMapping("/chat-with/sessions/{id}")
+    public void deleteSession(@PathVariable String id) {
+        sessionManager.deleteSession(id);
+    }
+
+    @PutMapping("/chat-with/sessions/{id}/activate")
+    public void activateSession(@PathVariable String id) {
+        sessionManager.activateSession(id);
     }
 }

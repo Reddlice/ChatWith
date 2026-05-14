@@ -1,8 +1,8 @@
 package org.reddlice.chatwith.service.impl;
 
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.reddlice.chatwith.component.SessionManager;
 import org.reddlice.chatwith.config.ClaudeCodeConfig;
 import org.reddlice.chatwith.dto.ChatRequest;
 import org.reddlice.chatwith.dto.ChatResponse;
@@ -11,7 +11,6 @@ import org.reddlice.chatwith.service.TtsService;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -21,7 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 @Service
@@ -30,33 +28,7 @@ public class ChatServiceImpl implements ChatService {
 
     private final ClaudeCodeConfig claudeCodeConfig;
     private final TtsService ttsService;
-
-    private String sessionId;
-    private final AtomicBoolean firstRequest = new AtomicBoolean(true);
-
-    @PostConstruct
-    public void init() {
-        Path sessionFile = Paths.get(claudeCodeConfig.getSkillsDir()).getParent().resolve(".chatwith-session");
-        if (Files.isRegularFile(sessionFile)) {
-            try {
-                sessionId = Files.readString(sessionFile).trim();
-                firstRequest.set(false);
-                log.info("恢复 Claude Code 会话: {}", sessionId);
-            } catch (IOException e) {
-                log.warn("读取会话文件失败，将创建新会话", e);
-            }
-        }
-        if (sessionId == null) {
-            sessionId = UUID.randomUUID().toString();
-            try {
-                Files.createDirectories(sessionFile.getParent());
-                Files.writeString(sessionFile, sessionId);
-                log.info("创建新 Claude Code 会话: {}", sessionId);
-            } catch (IOException e) {
-                log.warn("写入会话文件失败", e);
-            }
-        }
-    }
+    private final SessionManager sessionManager;
 
     @Override
     public ChatResponse chat(ChatRequest chatRequest) {
@@ -83,10 +55,13 @@ public class ChatServiceImpl implements ChatService {
             }
         }
 
-        // 3. 构建命令
+        // 3. 构建命令 , 如果当前会话不是新创建的就 --resume  ， 否则 -p 开启新会话
+        String sessionId = sessionManager.getActiveSessionId();
+        boolean isNew = !sessionManager.isSessionResumed(sessionId);
+
         List<String> command = new ArrayList<>();
         command.add(claudeCodeConfig.getPath());
-        if (firstRequest.getAndSet(false)) {
+        if (isNew) {
             command.add("--session-id");
             command.add(sessionId);
             command.add("-p");
@@ -151,6 +126,7 @@ public class ChatServiceImpl implements ChatService {
             }
 
             log.info("Chat 成功, skill={}, reply length={} replay = {}", skillName, reply.length() ,reply);
+            sessionManager.markSessionResumed(sessionId);
             String messageId = UUID.randomUUID().toString();
             ttsService.textToSpeechAsync(reply, messageId);
             ChatResponse response = new ChatResponse(reply, skillName, true);
