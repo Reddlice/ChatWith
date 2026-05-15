@@ -22,13 +22,15 @@ export const useChatStore = defineStore('chat', () => {
   // 消息变化自动保存
   watch(messages, () => saveMessages(), { deep: true })
 
+  //将信息添加到消息列表中，包含文本、是否是用户消息、消息ID、音频数据和创建时间等属性
   function addMessage(msg) {
     messages.value.push({
       id: msg.id || Date.now(),
       text: msg.text,
       isUser: msg.isUser,
       messageId: msg.messageId || null,
-      audioBase64: msg.audioBase64 || null
+      audioBase64: msg.audioBase64 || null,
+      createdAt: msg.createdAt || new Date().toISOString()
     })
   }
 
@@ -179,12 +181,28 @@ export const useChatStore = defineStore('chat', () => {
     recoverAudioForCurrent()
   }
 
-  // ---- 发送消息 ----
+  // ---- 发送消息 , 保留消息日志 ----
+
+  function saveLog(userMsg, assistantMsg) {
+    const session = sessions.value.find(s => s.id === activeSessionId.value)
+    if (!session) return
+    fetch('/chat-with/log', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sessionId: session.id,
+        sessionName: session.name,
+        createdAt: session.createdAt,
+        messages: [userMsg, assistantMsg]
+      })
+    }).catch(() => {})
+  }
 
   async function sendMessage(text) {
     if (!text.trim() || loading.value) return
 
-    addMessage({ text, isUser: true })
+    const userTime = new Date().toISOString()
+    addMessage({ text, isUser: true, createdAt: userTime })
     loading.value = true
 
     try {
@@ -194,14 +212,20 @@ export const useChatStore = defineStore('chat', () => {
         body: JSON.stringify({ prompt: text })
       })
       const data = await res.json()
+      const replyTime = new Date().toISOString()
       addMessage({
         text: data.reply,
         isUser: false,
-        messageId: data.messageId
+        messageId: data.messageId,
+        createdAt: replyTime
       })
       if (data.messageId) {
         pollAudio(data.messageId)
       }
+      saveLog(
+        { role: 'user', content: text, timestamp: userTime },
+        { role: 'assistant', content: data.reply, timestamp: replyTime }
+      )
     } catch (e) {
       addMessage({ text: '请求失败: ' + e.message, isUser: false })
     } finally {

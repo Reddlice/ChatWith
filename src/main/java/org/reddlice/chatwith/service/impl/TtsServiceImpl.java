@@ -29,6 +29,7 @@ public class TtsServiceImpl implements TtsService {
     private final AudioStore audioStore;
 
     private final HttpClient httpClient = HttpClient.newBuilder()
+            .version(HttpClient.Version.HTTP_1_1)
             .build();
 
     @Override

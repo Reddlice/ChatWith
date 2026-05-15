@@ -10,6 +10,7 @@ import org.reddlice.chatwith.dto.SessionInfo;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -33,6 +34,7 @@ public class SessionManager {
     private final Set<String> resumedSessions = new HashSet<>();
     private Path sessionsFile;
     private Path sessionIdFile;
+    private Path claudeProjectDir;
 
     public SessionManager(ClaudeCodeConfig claudeCodeConfig) {
         this.claudeCodeConfig = claudeCodeConfig;
@@ -45,6 +47,13 @@ public class SessionManager {
         Path skillsParent = Paths.get(claudeCodeConfig.getSkillsDir()).getParent();
         sessionsFile = skillsParent.resolve("sessions.json");
         sessionIdFile = skillsParent.resolve(".chatwith-session");
+
+        // Claude Code 项目会话数据目录：hash 由项目根目录（.claude 的父目录）计算
+        String userHome = System.getProperty("user.home");
+        Path projectRoot = skillsParent.toAbsolutePath().normalize().getParent();
+        String projectHash = projectRoot.toString().replaceAll("[^a-zA-Z0-9]", "-");
+        claudeProjectDir = Paths.get(userHome, ".claude", "projects", projectHash);
+        log.info("Claude Code 会话数据目录: {}", claudeProjectDir);
 
         try {
             Files.createDirectories(skillsParent);
@@ -160,6 +169,9 @@ public class SessionManager {
         sessions.remove(session);
         resumedSessions.remove(id);
 
+        // 删除 Claude Code 实际会话数据文件
+        deleteClaudeSessionFiles(id);
+
         // 如果删除的是当前活跃会话，切到第一个
         if (id.equals(activeSessionId)) {
             if (!sessions.isEmpty()) {
@@ -200,6 +212,41 @@ public class SessionManager {
             session.setResumed(true);
             resumedSessions.add(sessionId);
             saveSessions();
+        }
+    }
+
+    /**
+     * 删除 Claude Code 实际会话数据文件
+     */
+    private void deleteClaudeSessionFiles(String id) {
+        // 删除对话历史文件 ~/.claude/projects/<project-hash>/<sessionId>.jsonl
+        Path jsonlFile = claudeProjectDir.resolve(id + ".jsonl");
+        try {
+            if (Files.deleteIfExists(jsonlFile)) {
+                log.info("已删除 Claude Code 会话数据文件: {}", jsonlFile);
+            }
+        } catch (IOException e) {
+            log.warn("删除 Claude Code 会话数据文件失败: {}", jsonlFile, e);
+        }
+
+        // 删除会话跟踪文件 ~/.claude/sessions/<pid>.json（需要按内容匹配 sessionId）
+        Path sessionsDir = Paths.get(System.getProperty("user.home"), ".claude", "sessions");
+        if (Files.isDirectory(sessionsDir)) {
+            try (DirectoryStream<Path> stream = Files.newDirectoryStream(sessionsDir, "*.json")) {
+                for (Path entry : stream) {
+                    try {
+                        String content = Files.readString(entry);
+                        if (content.contains("\"sessionId\":\"" + id + "\"")) {
+                            Files.deleteIfExists(entry);
+                            log.info("已删除会话跟踪文件: {}", entry);
+                        }
+                    } catch (IOException e) {
+                        log.warn("读取会话跟踪文件失败: {}", entry, e);
+                    }
+                }
+            } catch (IOException e) {
+                log.warn("扫描会话跟踪目录失败: {}", sessionsDir, e);
+            }
         }
     }
 

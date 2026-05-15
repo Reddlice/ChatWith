@@ -1,0 +1,15 @@
+{"type":"session","id":"c1e0b8f4-fc68-4e15-a073-353f0279f646","name":"测试对话03","created_at":"2026-05-15T19:55:23.5970949","updated_at":"2026-05-15T19:57:14.7682378"}
+{"type":"message","role":"user","content":"(使用技能) 你好","timestamp":"2026-05-15T11:55:48.176Z"}
+{"type":"message","role":"assistant","content":"…","timestamp":"2026-05-15T11:55:57.859Z"}
+{"type":"message","role":"user","content":"你是谁","timestamp":"2026-05-15T11:59:56.423Z"}
+{"type":"message","role":"assistant","content":"…（瞥了一眼）\n春日野穹。\n\n……你谁。","timestamp":"2026-05-15T12:00:05.575Z"}
+{"type":"message","role":"user","content":"我知道了 谢谢你","timestamp":"2026-05-15T12:01:39.200Z"}
+{"type":"message","role":"assistant","content":"…うん。","timestamp":"2026-05-15T12:01:46.540Z"}
+{"type":"message","role":"user","content":"嗯什么","timestamp":"2026-05-15T12:02:03.547Z"}
+{"type":"message","role":"assistant","content":"（别过头去）\nうんはうん。\n…別に。","timestamp":"2026-05-15T12:02:10.436Z"}
+{"type":"message","role":"user","content":"我听不懂日语的","timestamp":"2026-05-15T12:02:36.793Z"}
+{"type":"message","role":"assistant","content":"（小声嘟囔）\n「嗯」就是「嗯」啦。\n……笨。","timestamp":"2026-05-15T12:02:42.712Z"}
+{"type":"message","role":"user","content":"你能在说一遍吗","timestamp":"2026-05-15T12:03:39.160Z"}
+{"type":"message","role":"assistant","content":"（脸微微别过去，但不耐烦中带点犹豫）\n…我说，「嗯就是嗯，没什么特别的」。\n\n听懂了？\n……再听不懂我就不说了。","timestamp":"2026-05-15T12:03:46.992Z"}
+{"type":"message","role":"user","content":"你能在说一遍吗","timestamp":"2026-05-15T12:04:21.434Z"}
+{"type":"message","role":"assistant","content":"（皱眉，别过脸，抱起兔子玩偶）\n…嫌だ。\n\n听不懂就算了。我又不是复读机。","timestamp":"2026-05-15T12:04:27.834Z"}

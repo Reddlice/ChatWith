@@ -5,9 +5,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.reddlice.chatwith.component.AudioStore;
 import org.reddlice.chatwith.component.SessionManager;
 import org.reddlice.chatwith.config.DefaultSettingConfig;
+import org.reddlice.chatwith.dto.ChatLogRequest;
 import org.reddlice.chatwith.dto.ChatRequest;
 import org.reddlice.chatwith.dto.ChatResponse;
 import org.reddlice.chatwith.dto.SessionInfo;
+import org.reddlice.chatwith.service.ChatLogService;
 import org.reddlice.chatwith.service.ChatService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -33,6 +35,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ChatController {
     private final ChatService chatService;
+    private final ChatLogService chatLogService;
     private final DefaultSettingConfig defaultSettingConfig;
     private final AudioStore audioStore;
     private final SessionManager sessionManager;
@@ -77,5 +80,10 @@ public class ChatController {
     @PutMapping("/chat-with/sessions/{id}/activate")
     public void activateSession(@PathVariable String id) {
         sessionManager.activateSession(id);
+    }
+
+    @PostMapping("/chat-with/log")
+    public void saveLog(@RequestBody ChatLogRequest request) {
+        chatLogService.saveLog(request);
     }
 }
