@@ -48,6 +48,12 @@ public class ChatController {
         return chatService.chat(chatRequest);
     }
 
+
+    /**
+     * 音频相关接口
+     * @param messageId
+     * @return
+     */
     @GetMapping("/chat-with/audio/{messageId}")
     public ResponseEntity<Map<String, Object>> getAudio(@PathVariable String messageId) {
         String audio = audioStore.get(messageId);
@@ -57,6 +63,20 @@ public class ChatController {
         return ResponseEntity.ok(Map.of("audioBase64", audio, "ready", true));
     }
 
+    @GetMapping("/chat-with/audio/session/{sessionId}")
+    public ResponseEntity<Map<String, String>> getSessionAudio(@PathVariable String sessionId) {
+        Map<String, String> audioMap = audioStore.getBySession(sessionId);
+        if (audioMap.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(audioMap);
+    }
+
+
+    /**
+     * 会话管理接口
+     * @return
+     */
     @GetMapping("/chat-with/sessions")
     public List<SessionInfo> listSessions() {
         return sessionManager.listSessions();

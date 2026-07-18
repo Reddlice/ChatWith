@@ -73,12 +73,12 @@ public class TtsServiceImpl implements TtsService {
 
     @Async
     @Override
-    public void textToSpeechAsync(String text, String messageId) {
-        log.info("异步 TTS 开始: messageId={}", messageId);
+    public void textToSpeechAsync(String text, String messageId, String sessionId) {
+        log.info("异步 TTS 开始: messageId={}, sessionId={}", messageId, sessionId);
         byte[] audio = textToSpeech(text);
         if (audio != null && audio.length > 0) {
-            audioStore.put(messageId, Base64.getEncoder().encodeToString(audio));
-            log.info("异步 TTS 完成: messageId={}, size={}bytes", messageId, audio.length);
+            audioStore.put(sessionId, messageId, Base64.getEncoder().encodeToString(audio));
+            log.info("异步 TTS 完成: messageId={}, sessionId={}, size={}bytes", messageId, sessionId, audio.length);
         } else {
             log.warn("异步 TTS 失败: messageId={}", messageId);
         }

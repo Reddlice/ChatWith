@@ -128,7 +128,7 @@ public class ChatServiceImpl implements ChatService {
             log.info("Chat 成功, skill={}, reply length={} replay = {}", skillName, reply.length() ,reply);
             sessionManager.markSessionResumed(sessionId);
             String messageId = UUID.randomUUID().toString();
-            ttsService.textToSpeechAsync(reply, messageId);
+            ttsService.textToSpeechAsync(reply, messageId, sessionId);
             ChatResponse response = new ChatResponse(reply, skillName, true);
             response.setMessageId(messageId);
             return response;
