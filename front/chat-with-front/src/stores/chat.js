@@ -7,10 +7,32 @@ export const useChatStore = defineStore('chat', () => {
   const sessions = ref([])
   const activeSessionId = ref(null)
 
-  // 每个会话的消息独立存储到 localStorage
+  // 每个会话的消息独立存储到 localStorage（排除大体积音频数据）
   function saveMessages() {
     if (activeSessionId.value) {
-      localStorage.setItem('chat-messages-' + activeSessionId.value, JSON.stringify(messages.value))
+      const toSave = messages.value.map(m => {
+        const { audioBase64, ...rest } = m
+        return rest
+      })
+      localStorage.setItem('chat-messages-' + activeSessionId.value, JSON.stringify(toSave))
+    }
+  }
+
+  // 从后端批量恢复当前会话的音频
+  async function restoreAudio() {
+    if (!activeSessionId.value) return
+    try {
+      const res = await fetch('/chat-with/audio/session/' + activeSessionId.value)
+      if (res.status === 200) {
+        const audioMap = await res.json()
+        for (const msg of messages.value) {
+          if (msg.messageId && audioMap[msg.messageId]) {
+            msg.audioBase64 = audioMap[msg.messageId]
+          }
+        }
+      }
+    } catch (e) {
+      console.error('恢复音频失败', e)
     }
   }
 
@@ -178,6 +200,7 @@ export const useChatStore = defineStore('chat', () => {
     }
     activeSessionId.value = id
     loadMessages(id)
+    restoreAudio()
     recoverAudioForCurrent()
   }
 
@@ -266,6 +289,7 @@ export const useChatStore = defineStore('chat', () => {
     // 加载当前会话的消息
     if (activeSessionId.value) {
       loadMessages(activeSessionId.value)
+      restoreAudio()
       recoverAudioForCurrent()
     }
   }
