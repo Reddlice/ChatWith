@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Configuration;
 
 /**
  * @ClassName: DefaultSettingConfig
- * @description: TODO
+ * @description: 设置配置类
  * @version: 1.0
  * @author: Redd_ice
  * @Date: 26/4/2026 下午 10:36

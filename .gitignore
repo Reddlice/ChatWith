@@ -41,5 +41,6 @@ CLAUDE.md
 /chat-logs/**
 /audio-store/**
 .claude
+.letta
 
 /md

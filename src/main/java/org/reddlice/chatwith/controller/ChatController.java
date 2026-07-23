@@ -25,7 +25,7 @@ import java.util.Map;
 
 /**
  * @ClassName: ChatController
- * @description: TODO
+ * @description: 控制层
  * @version: 1.0
  * @author: Redd_ice
  * @Date: 26/4/2026 下午 9:12

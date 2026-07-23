@@ -7,6 +7,13 @@ claude-code:
   timeout: 300000
   skillsDir: .claude/skills
 
+letta-server:
+  url: http://localhost:8283
+  timeout: 300000
+  model: deepseek/deepseek-v4-pro
+  embedding: letta/letta-free
+  system-prompt-path: .letta/sora-system-prompt.md
+
 setting:
   skillName : sora-perspective
   systemPrompt : "请用中文回答!!!!!! 请用中文回答!!!! 请用中文回答!!! 请用中文回答!! 如果是日文请翻译为中文!!!"
